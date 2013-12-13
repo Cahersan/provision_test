@@ -4,14 +4,11 @@
     - vars.yml
 
   tasks:
-  - name: Create a working directory.
-    file: state=directory path={{dir_root}}/{{dir_name}}
+  - name: Create a directory for django apps.
+    file: state=directory path={{apps_root}}
 
-  - name: Create a virtualenv directory.
-    file: state=directory path={{dir_root}}/{{dir_name}}/env/
-
-  - name: Copy webapp files to directory
-    copy: src=../web dest={{dir_root}}/{{dir_name}}
+  - name: Create a virtualenv directory in django apps directory.
+    file: state=directory path={{apps_root}}/env/
 
   - name: Install required system packages.
     apt: pkg={{item}} state=installed update-cache=yes
@@ -21,13 +18,17 @@
     easy_install: name={{item}}
     with_items: easy_install_packages
 
-  - name: Install Python Packages
-    pip: name={{item}} virtualenv={{dir_root}}/{{dir_name}}/env/
+  - name: Install Python Packages: django and gunicorn
+    pip: name={{item}} virtualenv={{apps_root}}/env/
     with_items: python_packages
 
-  - name: Install nginx configuration file.
+  - name: copy/start nginx configuration file.
     copy: src=conf/nginx.conf dest=/etc/nginx/sites-enabled/
     notify: restart nginx
-    
+
+  - name: copy/start gunicorn script
+    copy: src=conf/gunicorn_init.conf dest=/etc/init
+    notify: restart gunicorn
+
   handlers:
     - include: handlers.yml

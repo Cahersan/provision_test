@@ -1,6 +1,6 @@
 ---
-dir_name: test_page
-dir_root: /webapps
+apps_root: /webapps
+project_name: hello
 project_repo: git@bitbucket.org:Cahersan/icecreamratings_project.git
 system_packages:
   - build-essential
