@@ -3,10 +3,6 @@
   service: name=nginx state=restarted
   sudo_user: root
 
-- name: reload nginx
-  service: name=nginx state=reloaded
-  sudo_user: root
-
-- name: restart web frontend
-  action: service name=gunicorn_init state=restarted
+- name: restart gunicorn
+  service: name=gunicorn_init state=restarted
   sudo_user: root
