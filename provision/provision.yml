@@ -18,16 +18,22 @@
     easy_install: name={{item}}
     with_items: easy_install_packages
 
-  - name: Install Python Packages: django and gunicorn
+  - name: Install Python Packages - django and gunicorn
     pip: name={{item}} virtualenv={{apps_root}}/env/
     with_items: python_packages
 
-  - name: copy/start nginx configuration file.
+  - name: start django project if it doesn't exist
+    shell: "{{apps_root}}/env/bin/django-admin.py startproject {{project_name}} chdir={{apps_root}} creates={{apps_root}}/{{project_name}}"
+
+  - name: copy nginx configuration file and start nginx as a service.
     copy: src=conf/nginx.conf dest=/etc/nginx/sites-enabled/
     notify: restart nginx
 
-  - name: copy/start gunicorn script
+  - name: copy gunicorn_init script
     copy: src=conf/gunicorn_init.conf dest=/etc/init
+
+  - name: set gunicorn_init as a service and start
+    file: src=/etc/init/gunicorn_init.conf dest=/etc/init.d/gunicorn_init owner=root group=root state=link
     notify: restart gunicorn
 
   handlers:
