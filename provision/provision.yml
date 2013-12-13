@@ -1,0 +1,35 @@
+---
+- hosts: all
+  vars_files:
+    - vars.yml
+
+  tasks:
+  - name: Create a working directory.
+    file: state=directory path={{dir_root}}/{{dir_name}}
+
+  - name: Create a virtualenv directory.
+    file: state=directory path={{dir_root}}/{{dir_name}}/env/
+
+  - name: Copy webapp files to directory
+    copy: src=../web dest={{dir_root}}/{{dir_name}}
+
+  - name: Install required system packages.
+    apt: pkg={{item}} state=installed update-cache=yes
+    with_items: system_packages
+
+  - name: Install PIP
+    easy_install: name=pip
+
+  - name: Install virtualenv
+    easy_install: name=virtualenv
+
+  - name: Install Python Packages
+    pip: name={{item}} virtualenv={{dir_root}}/{{dir_name}}/env/
+    with_items: python_packages
+
+  - name: Install nginx configuration file.
+    copy: src=conf/nginx.conf dest=/etc/nginx/sites-enabled/
+    notify: restart nginx
+ 
+  handlers:
+    - include: handlers.yml
