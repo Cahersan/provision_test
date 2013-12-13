@@ -13,6 +13,9 @@ system_packages:
   - postgresql-contrib
   - nginx
   - python-setuptools
+easy_install_packages:
+  - virtualenv
+  - pip
 python_packages:
   - django 
   - gunicorn

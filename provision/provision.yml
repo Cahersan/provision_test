@@ -17,11 +17,9 @@
     apt: pkg={{item}} state=installed update-cache=yes
     with_items: system_packages
 
-  - name: Install PIP
-    easy_install: name=pip
-
-  - name: Install virtualenv
-    easy_install: name=virtualenv
+  - name: Install pip and virtualenv
+    easy_install: name={{item}}
+    with_items: easy_install_packages
 
   - name: Install Python Packages
     pip: name={{item}} virtualenv={{dir_root}}/{{dir_name}}/env/
@@ -30,6 +28,6 @@
   - name: Install nginx configuration file.
     copy: src=conf/nginx.conf dest=/etc/nginx/sites-enabled/
     notify: restart nginx
- 
+    
   handlers:
     - include: handlers.yml
