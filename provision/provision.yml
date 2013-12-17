@@ -22,18 +22,44 @@
     pip: name={{item}} virtualenv={{apps_root}}/env/
     with_items: python_packages
 
-  - name: start django project if it doesn't exist
+  - name: Start django project
     shell: "{{apps_root}}/env/bin/django-admin.py startproject {{project_name}} chdir={{apps_root}} creates={{apps_root}}/{{project_name}}"
 
-  - name: copy nginx configuration file and start nginx as a service.
+  - name: Start django app 
+    shell: "{{apps_root}}/env/bin/django-admin.py startapp {{app_name}} chdir={{apps_root}}/{{project_name}} creates={{apps_root}}/{{project_name}}/{{app_name}}"
+
+  - name: Copy settings.py to new project
+    copy: src=conf/settings.py dest={{apps_root}}/{{project_name}}/{{project_name}}
+
+  - name: setup pg_hba file
+    copy: src=conf/pg_hba.conf dest=/etc/postgresql/9.1/main/pg_hba.conf owner=postgres group=postgres mode=0640
+    register: pg_file
+
+  - name: reload postgres if it changed
+    service: name=postgresql state=reloaded enabled=yes
+    when: pg_file.changed
+
+  - name: Create postgreSQL database
+    postgresql_db: name=mydatabase
+
+  - name: Create postgreSQL user
+    postgresql_user: db=mydatabase name=mydatabaseuser password=mypassword priv=ALL
+
+  - name: Sync database
+    django_manage: app_path={{apps_root}}/{{project_name}} command=syncdb virtualenv={{apps_root}}/env
+   
+  - name: Create superuser for django auth system
+    shell: "{{apps_root}}/env/bin/django-admin.py createsuperuser --database mydatabase --username carlos --email cahersan@gmail.com  chdir={{apps_root}}/{{project_name}}"
+
+  - name: Set password for django auth system
+    shell: "python manage.py changepassword admin --database mydatabase  chdir={{apps_root}}/{{project_name}}"
+
+  - name: copy nginx configuration file
     copy: src=conf/nginx.conf dest=/etc/nginx/sites-enabled/
     notify: restart nginx
 
-  - name: copy gunicorn_init script
+  - name: copy gunicorn configuration
     copy: src=conf/gunicorn_init.conf dest=/etc/init
-
-  - name: set gunicorn_init as a service and start
-    file: src=/etc/init/gunicorn_init.conf dest=/etc/init.d/gunicorn_init owner=root group=root state=link
     notify: restart gunicorn
 
   handlers:

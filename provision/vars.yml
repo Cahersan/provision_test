@@ -1,7 +1,7 @@
 ---
 apps_root: /webapps
 project_name: hello
-project_repo: git@bitbucket.org:Cahersan/icecreamratings_project.git
+app_name: testapp
 system_packages:
   - build-essential
   - vim
@@ -16,6 +16,7 @@ system_packages:
 easy_install_packages:
   - virtualenv
   - pip
+  - psycopg2
 python_packages:
   - django 
   - gunicorn
