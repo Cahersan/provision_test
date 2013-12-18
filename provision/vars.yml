@@ -20,3 +20,4 @@ easy_install_packages:
 python_packages:
   - django 
   - gunicorn
+  - psycopg2
