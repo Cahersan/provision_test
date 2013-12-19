@@ -1,7 +1,12 @@
 ---
 apps_root: /webapps
-project_name: hello
-app_name: testapp
+project_name: icecreamratings_project
+repository_root: "{{apps_root}}/{{project_name}}"
+project_root: "{{repository_root}}/{{project_name}}"
+configuration_root: "{{project_root}}/{{project_name}}"
+venv_path: "{{apps_root}}/.virtualenvs/{{project_name}}"
+remote_repository: https://github.com/Cahersan/icecreamratings_project.git 
+#git@github.com:Cahersan/icecreamratings_project.git 
 system_packages:
   - build-essential
   - vim

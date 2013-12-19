@@ -8,7 +8,7 @@
     file: state=directory path={{apps_root}}
 
   - name: Create a virtualenv directory in django apps directory.
-    file: state=directory path={{apps_root}}/env/
+    file: state=directory path={{venv_path}}
 
   - name: Install required system packages.
     apt: pkg={{item}} state=installed update-cache=yes
@@ -19,17 +19,25 @@
     with_items: easy_install_packages
 
   - name: Install Python Packages
-    pip: name={{item}} virtualenv={{apps_root}}/env/
+    pip: name={{item}} virtualenv={{venv_path}}
     with_items: python_packages
 
-  - name: Start django project
-    shell: "{{apps_root}}/env/bin/django-admin.py startproject {{project_name}} chdir={{apps_root}} creates={{apps_root}}/{{project_name}}"
+#  - name: Start django project
+#    shell: "{{apps_root}}/env/bin/django-admin.py startproject {{project_name}} chdir={{apps_root}} creates={{apps_root}}/{{project_name}}"
 
-  - name: Start django app 
-    shell: "{{apps_root}}/env/bin/django-admin.py startapp {{app_name}} chdir={{apps_root}}/{{project_name}} creates={{apps_root}}/{{project_name}}/{{app_name}}"
+#  - name: Start django app 
+#    shell: "{{apps_root}}/env/bin/django-admin.py startapp {{app_name}} chdir={{apps_root}}/{{project_name}} creates={{apps_root}}/{{project_name}}/{{app_name}}"
+  - name: Clone Django project from repo
+    git: repo={{remote_repository}} dest={{repository_root}}
 
-  - name: Copy settings.py to new project
-    copy: src=conf/settings.py dest={{apps_root}}/{{project_name}}/{{project_name}}
+  - name: Copy base.py settings to new project
+    copy: src=conf/base.py dest={{configuration_root}}/settings
+
+  - name: Copy production.py settings to new project
+    copy: src=conf/production.py dest={{configuration_root}}/settings
+
+  - name: Install project requirements
+    pip: requirements={{repository_root}}/requirements/production.txt virtualenv={{venv_path}}
 
   - name: setup pg_hba file
     copy: src=conf/pg_hba.conf dest=/etc/postgresql/9.1/main/pg_hba.conf owner=postgres group=postgres mode=0640
@@ -46,13 +54,13 @@
     postgresql_user: db=mydatabase name=mydatabaseuser password=mypassword priv=ALL
 
   - name: Sync database
-    django_manage: app_path={{apps_root}}/{{project_name}} command=syncdb virtualenv={{apps_root}}/env
+    django_manage: app_path={{project_root}} command=syncdb virtualenv={{venv_path}} settings={{project_name}}.settings.production
 
-  - name: Copy initial_data.json (created using manage.py dumpdata > file.json)
-    copy: src=conf/initial_data.json dest={{apps_root}}/{{project_name}}
+  - name: Copy initial_data.json
+    copy: src=conf/initial_data.json dest={{project_root}}
   
   - name: Load superuser information and other from initial_data.json
-    django_manage: command=loaddata app_path={{apps_root}}/{{project_name}} fixtures=initial_data.json virtualenv={{apps_root}}/env
+    django_manage: command=loaddata app_path={{project_root}} fixtures=initial_data.json virtualenv={{venv_path}} settings={{project_name}}.settings.production
 
   - name: copy nginx configuration file
     copy: src=conf/nginx.conf dest=/etc/nginx/sites-enabled/
